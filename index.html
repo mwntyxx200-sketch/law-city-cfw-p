@@ -3,11 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAW CITY CFW | الواجهة الرسمية</title>
+    <title id="pageTitleMeta">LAW CITY CFW | الواجهة الرسمية</title>
     <!-- خط استعراضي أنيق -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <!-- أيقونات FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- استدعاء مكتبة Firebase النسخة المتوافقة مع المتصفح المباشر -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
             --bg-color: #0d0f12;
@@ -22,345 +27,62 @@
             --warning: #f59e0b;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Cairo', sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; background-image: radial-gradient(circle at 50% 20%, #131b26 0%, var(--bg-color) 80%); overflow-x: hidden; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
-            background-image: radial-gradient(circle at 50% 20%, #131b26 0%, var(--bg-color) 80%);
-            overflow-x: hidden;
-        }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: rgba(13, 15, 18, 0.85); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0, 180, 216, 0.15); position: sticky; top: 0; z-index: 1000; }
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { font-size: 28px; color: var(--accent-teal); text-shadow: 0 0 15px var(--primary-glow); }
+        .server-title { font-size: 24px; font-weight: 900; letter-spacing: 1px; background: linear-gradient(45deg, #fff, var(--accent-teal)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* رأس الصفحة */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 5%;
-            background: rgba(13, 15, 18, 0.85);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(0, 180, 216, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+        .admin-btn { background: linear-gradient(135deg, #0077b6, var(--accent-teal)); color: #000; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 223, 196, 0.2); }
+        .admin-btn:hover { transform: translateY(-2px); box-shadow: 0 0 25px var(--primary-glow); }
 
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        main { max-width: 1100px; margin: 40px auto; padding: 0 20px; text-align: center; }
+        .hero-section { margin-bottom: 40px; }
+        .hero-section h1 { font-size: 38px; margin-bottom: 10px; font-weight: 900; }
+        .hero-section p { color: var(--text-muted); font-size: 16px; }
 
-        .logo-icon {
-            font-size: 28px;
-            color: var(--accent-teal);
-            text-shadow: 0 0 15px var(--primary-glow);
-        }
+        .links-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 30px; }
+        .link-card { background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 25px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 20px; transition: all 0.3s ease; position: relative; overflow: hidden; backdrop-filter: blur(5px); }
+        .link-card::before { content: ''; position: absolute; top: 0; right: 0; width: 4px; height: 100%; background: var(--accent-teal); opacity: 0.5; transition: 0.3s; }
+        .link-card:hover { transform: translateY(-5px); border-color: var(--accent-teal); box-shadow: 0 10px 30px rgba(0, 223, 196, 0.1); }
+        .link-card:hover::before { opacity: 1; box-shadow: 0 0 10px var(--accent-teal); }
 
-        .server-title {
-            font-size: 24px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            background: linear-gradient(45deg, #fff, var(--accent-teal));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .link-img { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--accent-teal); flex-shrink: 0; }
+        .link-info { text-align: right; flex-grow: 1; }
+        .link-info h3 { font-size: 18px; margin-bottom: 5px; color: #fff; }
+        .link-info p { font-size: 13px; color: var(--text-muted); }
 
-        /* زر الإدارة */
-        .admin-btn {
-            background: linear-gradient(135deg, #0077b6, var(--accent-teal));
-            color: #000;
-            border: none;
-            padding: 10px 22px;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 0 15px rgba(0, 223, 196, 0.2);
-        }
-
-        .admin-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 25px var(--primary-glow);
-        }
-
-        /* المحتوى الرئيسي */
-        main {
-            max-width: 1100px;
-            margin: 40px auto;
-            padding: 0 20px;
-            text-align: center;
-        }
-
-        .hero-section {
-            margin-bottom: 40px;
-        }
-
-        .hero-section h1 {
-            font-size: 38px;
-            margin-bottom: 10px;
-            font-weight: 900;
-        }
-
-        .hero-section p {
-            color: var(--text-muted);
-            font-size: 16px;
-        }
-
-        /* شبكة الروابط */
-        .links-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .link-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 25px;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(5px);
-        }
-
-        .link-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--accent-teal);
-            opacity: 0.5;
-            transition: 0.3s;
-        }
-
-        .link-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent-teal);
-            box-shadow: 0 10px 30px rgba(0, 223, 196, 0.1);
-        }
-
-        .link-card:hover::before {
-            opacity: 1;
-            box-shadow: 0 0 10px var(--accent-teal);
-        }
-
-        .link-img {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            object-fit: cover;
-            background: #1e293b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: var(--accent-teal);
-            flex-shrink: 0;
-        }
-
-        .link-info {
-            text-align: right;
-            flex-grow: 1;
-        }
-
-        .link-info h3 {
-            font-size: 18px;
-            margin-bottom: 5px;
-            color: #fff;
-        }
-
-        .link-info p {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        /* أزرار التحكم الخاصة بالبطاقة (تظهر للإدارة فقط) */
-        .card-admin-actions {
-            display: none;
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            gap: 5px;
-            z-index: 10;
-        }
-
-        .card-action-btn {
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 5px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
+        .card-admin-actions { display: none; position: absolute; top: 10px; left: 10px; gap: 5px; z-index: 10; }
+        .card-action-btn { background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 5px 8px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; }
         .card-action-btn.edit:hover { background: var(--warning); color: #000; }
         .card-action-btn.delete:hover { background: var(--danger); }
 
-        /* لوحة تحكم المدير */
-        .admin-panel {
-            display: none;
-            background: rgba(18, 22, 29, 0.95);
-            border: 1px solid var(--accent-teal);
-            border-radius: 16px;
-            padding: 30px;
-            margin-top: 40px;
-            text-align: right;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
-        }
+        .admin-panel { display: none; background: rgba(18, 22, 29, 0.95); border: 1px solid var(--accent-teal); border-radius: 16px; padding: 30px; margin-top: 40px; text-align: right; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8); }
+        .admin-panel h2, .admin-panel h3 { color: var(--accent-teal); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 14px; color: var(--text-muted); }
+        .form-group input { width: 100%; padding: 12px; background: #0d0f12; border: 1px solid #334155; border-radius: 8px; color: #fff; font-size: 15px; }
+        .form-group input:focus { border-color: var(--accent-teal); outline: none; }
 
-        .admin-panel h2, .admin-panel h3 {
-            color: var(--accent-teal);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .btn-action { background: var(--accent-teal); color: #000; padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-left: 10px; transition: 0.2s; }
+        .btn-action:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-danger { background: var(--danger); color: #fff; }
 
-        .form-group {
-            margin-bottom: 15px;
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: #12161d; border: 1px solid rgba(0, 223, 196, 0.3); padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; }
+        .modal-content h3 { margin-bottom: 20px; color: var(--accent-teal); }
+        .close-modal { float: left; cursor: pointer; color: var(--text-muted); font-size: 20px; }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            background: #0d0f12;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 15px;
-        }
-
-        .form-group input:focus {
-            border-color: var(--accent-teal);
-            outline: none;
-        }
-
-        .btn-action {
-            background: var(--accent-teal);
-            color: #000;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-left: 10px;
-            transition: 0.2s;
-        }
-
-        .btn-action:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-        }
-
-        /* نافذة منبثقة (Modal) عامة */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-
-        .modal-content {
-            background: #12161d;
-            border: 1px solid rgba(0, 223, 196, 0.3);
-            padding: 30px;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .modal-content h3 {
-            margin-bottom: 20px;
-            color: var(--accent-teal);
-        }
-
-        .close-modal {
-            float: left;
-            cursor: pointer;
-            color: var(--text-muted);
-            font-size: 20px;
-        }
-
-        /* الفوتر والإضافات */
-        footer {
-            margin-top: 60px;
-            padding: 30px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        .server-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(34, 197, 94, 0.1);
-            color: var(--success);
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 13px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(34, 197, 94, 0.2);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--success);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(0.95); opacity: 0.8; }
-        }
+        footer { margin-top: 60px; padding: 30px 0; border-top: 1px solid rgba(255, 255, 255, 0.05); text-align: center; color: var(--text-muted); font-size: 14px; }
+        .server-status { display: inline-flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.1); color: var(--success); padding: 6px 15px; border-radius: 20px; font-size: 13px; margin-bottom: 15px; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .status-dot { width: 8px; height: 8px; background-color: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
     </style>
 </head>
 <body>
 
-    <!-- رأس الصفحة -->
     <header>
         <div class="logo-area">
             <i class="fa-solid fa-scale-balanced logo-icon"></i>
@@ -374,34 +96,27 @@
         </div>
     </header>
 
-    <!-- المحتوى الرئيسي -->
     <main>
         <div class="hero-section">
-            <div class="server-status">
-                <span class="status-dot"></span> السيرفر يعمل بشكل طبيعي • Online
-            </div>
-            <h1 id="mainHeading">بوابة الروابط الرسمية</h1>
+            <div class="server-status"><span class="status-dot"></span> السيرفر يعمل بشكل طبيعي • Online</div>
+            <h1>بوابة الروابط الرسمية</h1>
             <p>جميع روابط ومواقع سيرفر LAW CITY CFW الرسمية في مكان واحد</p>
         </div>
 
-        <!-- شبكة الروابط -->
-        <div class="links-grid" id="linksContainer">
-            <!-- سيتم تعبئة الروابط برمجياً -->
-        </div>
+        <div class="links-grid" id="linksContainer"></div>
 
-        <!-- لوحة تحكم المدير (تظهر فقط عند تسجيل الدخول) -->
         <div class="admin-panel" id="adminPanel">
-            <h2><i class="fa-solid fa-gear"></i> لوحة تحكم المدير (Manager Panel)</h2>
+            <h2><i class="fa-solid fa-gear"></i> لوحة تحكم المدير السحابية (Cloud Panel)</h2>
             
             <div class="form-group">
                 <label>تعديل اسم الموقع الرئيسي:</label>
                 <input type="text" id="inputSiteTitle" value="LAW CITY CFW">
-                <button class="btn-action" onclick="updateTitle()" style="margin-top: 8px;">حفظ الاسم</button>
+                <button class="btn-action" onclick="saveTitleToCloud()" style="margin-top: 8px;">حفظ وتحديث للجميع</button>
             </div>
 
             <hr style="border-color: #334155; margin: 25px 0;">
 
-            <h3><i class="fa-solid fa-plus-circle"></i> إضافة رابط جديد للواجهة</h3>
+            <h3><i class="fa-solid fa-plus-circle"></i> إضافة رابط جديد للسحابة</h3>
             <div class="form-group" style="margin-top: 15px;">
                 <label>عنوان الرابط:</label>
                 <input type="text" id="newTitle" placeholder="مثال: متجر السيرفر">
@@ -411,27 +126,23 @@
                 <input type="text" id="newUrl" placeholder="https://...">
             </div>
             <div class="form-group">
-                <label>رابط الصورة المصغرة أو أيقونة (FontAwesome class مثل fa-solid fa-store أو رابط صورة):</label>
+                <label>الأيقونة أو الصورة:</label>
                 <input type="text" id="newIcon" placeholder="fa-solid fa-store">
             </div>
             <div class="form-group">
                 <label>وصف مختصر:</label>
-                <input type="text" id="newDesc" placeholder="شرح مبسط عن الموقع">
+                <input type="text" id="newDesc" placeholder="شرح مبسط">
             </div>
-            <button class="btn-action" onclick="addNewLink()">إضافة الرابط للقائمة</button>
+            <button class="btn-action" onclick="addLinkToCloud()">إضافة الرابط للجميع</button>
 
             <hr style="border-color: #334155; margin: 25px 0;">
 
-            <h3><i class="fa-solid fa-user-gear"></i> إعدادات الأدمن وتغيير كلمة المرور</h3>
+            <h3><i class="fa-solid fa-user-gear"></i> إعدادات الأدمن</h3>
             <div class="form-group" style="margin-top: 15px;">
-                <label>اسم المستخدم الحالي (Manager Username):</label>
-                <input type="text" id="adminUserDisplay" value="manager" disabled style="opacity: 0.7;">
-            </div>
-            <div class="form-group">
                 <label>كلمة المرور الجديدة:</label>
-                <input type="password" id="newAdminPass" placeholder="أدخل كلمة المرور الجديدة">
+                <input type="password" id="newAdminPass" placeholder="كلمة المرور الجديدة">
             </div>
-            <button class="btn-action" onclick="updateAdminCredentials()">حفظ كلمة المرور الجديدة</button>
+            <button class="btn-action" onclick="updateAdminPass()">حفظ كلمة المرور</button>
 
             <div style="margin-top: 30px; text-align: left;">
                 <button class="btn-action btn-danger" onclick="logoutAdmin()">تسجيل الخروج</button>
@@ -439,92 +150,90 @@
         </div>
     </main>
 
-    <!-- نافذة تسجيل الدخول -->
+    <!-- النوافذ المنبثقة -->
     <div class="modal" id="loginModal">
         <div class="modal-content">
             <span class="close-modal" onclick="toggleModal('loginModal')">&times;</span>
             <h3>تسجيل دخول الإداريين</h3>
-            <div class="form-group" style="text-align: right;">
-                <label>اسم المستخدم (Username):</label>
-                <input type="text" id="usernameInput" placeholder="manager">
-            </div>
-            <div class="form-group" style="text-align: right;">
-                <label>كلمة المرور (Password):</label>
-                <input type="password" id="passwordInput" placeholder="123">
-            </div>
+            <div class="form-group" style="text-align: right;"><label>اسم المستخدم:</label><input type="text" id="usernameInput" placeholder="manager"></div>
+            <div class="form-group" style="text-align: right;"><label>كلمة المرور:</label><input type="password" id="passwordInput" placeholder="123"></div>
             <button class="admin-btn" style="width: 100%; margin-top: 10px;" onclick="loginAdmin()">دخول</button>
         </div>
     </div>
 
-    <!-- نافذة تعديل الرابط -->
     <div class="modal" id="editModal">
         <div class="modal-content">
             <span class="close-modal" onclick="toggleModal('editModal')">&times;</span>
             <h3>تعديل الرابط</h3>
-            <input type="hidden" id="editIndex">
-            <div class="form-group" style="text-align: right;">
-                <label>عنوان الرابط:</label>
-                <input type="text" id="editTitle">
-            </div>
-            <div class="form-group" style="text-align: right;">
-                <label>رابط الموقع (URL):</label>
-                <input type="text" id="editUrl">
-            </div>
-            <div class="form-group" style="text-align: right;">
-                <label>الأيقونة أو الصورة:</label>
-                <input type="text" id="editIcon">
-            </div>
-            <div class="form-group" style="text-align: right;">
-                <label>الوصف المختصر:</label>
-                <input type="text" id="editDesc">
-            </div>
-            <button class="btn-action" style="width: 100%; margin-top: 10px;" onclick="saveEditedLink()">حفظ التعديلات</button>
+            <input type="hidden" id="editId">
+            <div class="form-group" style="text-align: right;"><label>العنوان:</label><input type="text" id="editTitle"></div>
+            <div class="form-group" style="text-align: right;"><label>الرابط:</label><input type="text" id="editUrl"></div>
+            <div class="form-group" style="text-align: right;"><label>الأيقونة:</label><input type="text" id="editIcon"></div>
+            <div class="form-group" style="text-align: right;"><label>الوصف:</label><input type="text" id="editDesc"></div>
+            <button class="btn-action" style="width: 100%; margin-top: 10px;" onclick="saveEditedLink()">حفظ التعديلات للجميع</button>
         </div>
     </div>
 
-    <!-- الفوتر -->
-    <footer>
-        <p>جميع الحقوق محفوظة © 2026 - **LAW CITY CFW** Server</p>
-    </footer>
+    <footer><p>جميع الحقوق محفوظة © 2026 - **LAW CITY CFW** Server</p></footer>
 
-    <!-- البرمجة التفاعلية -->
+    <!-- ربط و برمجة قاعدة البيانات السحابية باستخدام إعداداتك -->
     <script>
-        // بيانات الحساب الافتراضية
-        let adminSettings = {
-            username: 'manager',
-            password: '123'
+        // إعدادات Firebase الخاصة بك المدمجة تلقائياً
+        const firebaseConfig = {
+            apiKey: "AIzaSyCX2KrHo01jm8uj3NeL-iZqUj--6DYuEoM",
+            authDomain: "law-city-cfw-p.firebaseapp.com",
+            projectId: "law-city-cfw-p",
+            storageBucket: "law-city-cfw-p.firebasestorage.app",
+            messagingSenderId: "1084846227202",
+            appId: "1:1084846227202:web:c2f0e21c193f6c2e0ecc1b",
+            measurementId: "G-D0F281JJ07"
         };
 
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let isAdmin = false;
+        let linksCache = [];
 
-        // قائمة الروابط الافتراضية للسيرفر
-        let linksData = [
-            {
-                title: "ديسكورد السيرفر",
-                url: "https://discord.gg",
-                icon: "fa-brands fa-discord",
-                desc: "انضم لمجتمعنا الرسمي وتعرف على الرتب"
-            },
-            {
-                title: "قوانين وأنظمة السيرفر",
-                url: "#",
-                icon: "fa-solid fa-book",
-                desc: "دليل القوانين العامة والجنائية والسيناريوهات"
-            },
-            {
-                title: "التقديمات الإدارية والعسكرية",
-                url: "#",
-                icon: "fa-solid fa-file-invoice",
-                desc: "قدم على القطاعات العسكرية والإدارية المتاحة"
+        // المزامنة الحية المباشرة مع قاعدة البيانات السحابية
+        db.collection("siteData").doc("config").onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                
+                if(data.title) {
+                    document.getElementById('siteTitle').innerText = data.title;
+                    document.getElementById('pageTitleMeta').innerText = data.title + " | الواجهة الرسمية";
+                    document.getElementById('inputSiteTitle').value = data.title;
+                }
+
+                if(data.links) {
+                    linksCache = data.links;
+                    renderLinks();
+                }
+
+                window.storedPass = data.adminPass || '123';
+            } else {
+                initializeDefaultData();
             }
-        ];
+        });
 
-        // عرض الروابط في الصفحة
+        function initializeDefaultData() {
+            const defaultLinks = [
+                { title: "ديسكورد السيرفر", url: "https://discord.gg", icon: "fa-brands fa-discord", desc: "انضم لمجتمعنا الرسمي وتعرف على الرتب" },
+                { title: "قوانين وأنظمة السيرفر", url: "#", icon: "fa-solid fa-book", desc: "دليل القوانين العامة والجنائية" }
+            ];
+            db.collection("siteData").doc("config").set({
+                title: "LAW CITY CFW",
+                links: defaultLinks,
+                adminPass: "123"
+            });
+        }
+
         function renderLinks() {
             const container = document.getElementById('linksContainer');
             container.innerHTML = '';
 
-            linksData.forEach((link, index) => {
+            linksCache.forEach((link, index) => {
                 let iconHtml = link.icon.startsWith('http') 
                     ? `<img src="${link.icon}" class="link-img" style="object-fit:cover;">` 
                     : `<div class="link-img"><i class="${link.icon}"></i></div>`;
@@ -558,19 +267,16 @@
         function loginAdmin() {
             const user = document.getElementById('usernameInput').value;
             const pass = document.getElementById('passwordInput').value;
+            const currentPass = window.storedPass || '123';
 
-            if (user === adminSettings.username && pass === adminSettings.password) {
+            if (user === 'manager' && pass === currentPass) {
                 isAdmin = true;
                 document.getElementById('adminPanel').style.display = 'block';
                 document.getElementById('authBtn').style.display = 'none';
                 document.getElementById('userBadge').style.display = 'inline-block';
                 toggleModal('loginModal');
-                
-                document.getElementById('usernameInput').value = '';
-                document.getElementById('passwordInput').value = '';
-                
-                renderLinks(); // إعادة رسم الروابط لإظهار أزرار التعديل والحذف
-                alert('مرحباً بك يا Manager! تم تفعيل صلاحيات تعديل وحذف الروابط.');
+                renderLinks();
+                alert('مرحباً بك يا Manager! تم ربط لوحة التحكم بقاعدة بياناتك السحابية بنجاح.');
             } else {
                 alert('خطأ في اسم المستخدم أو كلمة المرور!');
             }
@@ -585,56 +291,52 @@
             alert('تم تسجيل الخروج بنجاح.');
         }
 
-        function updateTitle() {
+        function saveTitleToCloud() {
             const newT = document.getElementById('inputSiteTitle').value;
-            document.getElementById('siteTitle').innerText = newT;
-            alert('تم تحديث اسم السيرفر بنجاح!');
+            db.collection("siteData").doc("config").update({ title: newT })
+              .then(() => alert('تم تحديث وحفظ الاسم لجميع الزوار عبر السحابة!'));
         }
 
-        function updateAdminCredentials() {
+        function updateAdminPass() {
             const newPass = document.getElementById('newAdminPass').value;
-            if (!newPass) {
-                alert('الرجاء إدخال كلمة المرور الجديدة!');
-                return;
-            }
-            adminSettings.password = newPass;
-            document.getElementById('newAdminPass').value = '';
-            alert('تم تغيير كلمة مرور المدير بنجاح!');
+            if(!newPass) return alert('الرجاء كتابة كلمة المرور الجديدة');
+            db.collection("siteData").doc("config").update({ adminPass: newPass })
+              .then(() => {
+                  document.getElementById('newAdminPass').value = '';
+                  alert('تم تحديث كلمة المرور في السحابة بنجاح!');
+              });
         }
 
-        function addNewLink() {
+        function addLinkToCloud() {
             const title = document.getElementById('newTitle').value;
             const url = document.getElementById('newUrl').value;
             const icon = document.getElementById('newIcon').value || 'fa-solid fa-link';
             const desc = document.getElementById('newDesc').value;
 
-            if (!title || !url) {
-                alert('يرجى إدخال عنوان الرابط ورابط الموقع على الأقل!');
-                return;
-            }
+            if (!title || !url) return alert('يرجى إدخال العنوان ورابط الموقع!');
 
-            linksData.push({ title, url, icon, desc });
-            renderLinks();
-
-            document.getElementById('newTitle').value = '';
-            document.getElementById('newUrl').value = '';
-            document.getElementById('newIcon').value = '';
-            document.getElementById('newDesc').value = '';
-
-            alert('تمت إضافة الرابط بنجاح للقائمة!');
+            linksCache.push({ title, url, icon, desc });
+            db.collection("siteData").doc("config").update({ links: linksCache })
+              .then(() => {
+                  document.getElementById('newTitle').value = '';
+                  document.getElementById('newUrl').value = '';
+                  document.getElementById('newIcon').value = '';
+                  document.getElementById('newDesc').value = '';
+                  alert('تمت إضافة الرابط وظهر للجميع فوراً!');
+              });
         }
 
         function deleteLink(index) {
-            if (confirm('هل أنت متأكد من حذف هذا الرابط؟')) {
-                linksData.splice(index, 1);
-                renderLinks();
-                alert('تم حذف الرابط بنجاح.');
+            if (confirm('هل أنت متأكد من الحذف؟')) {
+                linksCache.splice(index, 1);
+                db.collection("siteData").doc("config").update({ links: linksCache })
+                  .then(() => alert('تم حذف الرابط وتحديث الواجهة للجميع.'));
             }
         }
 
         function openEditModal(index) {
-            const link = linksData[index];
-            document.getElementById('editIndex').value = index;
+            const link = linksCache[index];
+            document.getElementById('editId').value = index;
             document.getElementById('editTitle').value = link.title;
             document.getElementById('editUrl').value = link.url;
             document.getElementById('editIcon').value = link.icon;
@@ -643,20 +345,19 @@
         }
 
         function saveEditedLink() {
-            const index = document.getElementById('editIndex').value;
-            linksData[index] = {
+            const index = document.getElementById('editId').value;
+            linksCache[index] = {
                 title: document.getElementById('editTitle').value,
                 url: document.getElementById('editUrl').value,
                 icon: document.getElementById('editIcon').value,
                 desc: document.getElementById('editDesc').value
             };
-            toggleModal('editModal');
-            renderLinks();
-            alert('تم تعديل تفاصيل الرابط بنجاح!');
+            db.collection("siteData").doc("config").update({ links: linksCache })
+              .then(() => {
+                  toggleModal('editModal');
+                  alert('تم حفظ التعديلات لتظهر للجميع فوراً!');
+              });
         }
-
-        // تشغيل عرض الروابط لأول مرة عند تحميل الصفحة
-        window.onload = renderLinks;
     </script>
 </body>
 </html>
