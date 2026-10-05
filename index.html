@@ -19,6 +19,7 @@
             --text-muted: #94a3b8;
             --danger: #ef4444;
             --success: #22c55e;
+            --warning: #f59e0b;
         }
 
         * {
@@ -189,7 +190,31 @@
             color: var(--text-muted);
         }
 
-        /* لوحة التحكم الإدارية (مخفية افتراضياً) */
+        /* أزرار التحكم الخاصة بالبطاقة (تظهر للإدارة فقط) */
+        .card-admin-actions {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .card-action-btn {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .card-action-btn.edit:hover { background: var(--warning); color: #000; }
+        .card-action-btn.delete:hover { background: var(--danger); }
+
+        /* لوحة تحكم المدير */
         .admin-panel {
             display: none;
             background: rgba(18, 22, 29, 0.95);
@@ -257,7 +282,7 @@
             color: #fff;
         }
 
-        /* شاشة تسجيل الدخول المنبثقة */
+        /* نافذة منبثقة (Modal) عامة */
         .modal {
             display: none;
             position: fixed;
@@ -345,7 +370,7 @@
             <span id="userBadge" style="margin-left: 15px; font-size: 14px; color: var(--accent-teal); display: none;">
                 <i class="fa-solid fa-user-shield"></i> Manager
             </span>
-            <button class="admin-btn" id="authBtn" onclick="toggleAuthModal()">تسجيل الدخول للإدارة</button>
+            <button class="admin-btn" id="authBtn" onclick="toggleModal('loginModal')">تسجيل الدخول للإدارة</button>
         </div>
     </header>
 
@@ -361,28 +386,7 @@
 
         <!-- شبكة الروابط -->
         <div class="links-grid" id="linksContainer">
-            <!-- الروابط الافتراضية -->
-            <a href="https://discord.gg" target="_blank" class="link-card">
-                <div class="link-img"><i class="fa-brands fa-discord"></i></div>
-                <div class="link-info">
-                    <h3>ديسكورد السيرفر</h3>
-                    <p>انضم لمجتمعنا الرسمي وتعرف على الرتب</p>
-                </div>
-            </a>
-            <a href="#" class="link-card">
-                <div class="link-img"><i class="fa-solid fa-book"></i></div>
-                <div class="link-info">
-                    <h3>قوانين وأنظمة السيرفر</h3>
-                    <p>دليل القوانين العامة والجنائية والسيناريوهات</p>
-                </div>
-            </a>
-            <a href="#" class="link-card">
-                <div class="link-img"><i class="fa-solid fa-file-invoice"></i></div>
-                <div class="link-info">
-                    <h3>التقديمات الإدارية والعسكرية</h3>
-                    <p>قدم على القطاعات العسكرية والإدارية المتاحة</p>
-                </div>
-            </a>
+            <!-- سيتم تعبئة الروابط برمجياً -->
         </div>
 
         <!-- لوحة تحكم المدير (تظهر فقط عند تسجيل الدخول) -->
@@ -438,7 +442,7 @@
     <!-- نافذة تسجيل الدخول -->
     <div class="modal" id="loginModal">
         <div class="modal-content">
-            <span class="close-modal" onclick="toggleAuthModal()">&times;</span>
+            <span class="close-modal" onclick="toggleModal('loginModal')">&times;</span>
             <h3>تسجيل دخول الإداريين</h3>
             <div class="form-group" style="text-align: right;">
                 <label>اسم المستخدم (Username):</label>
@@ -452,6 +456,32 @@
         </div>
     </div>
 
+    <!-- نافذة تعديل الرابط -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="toggleModal('editModal')">&times;</span>
+            <h3>تعديل الرابط</h3>
+            <input type="hidden" id="editIndex">
+            <div class="form-group" style="text-align: right;">
+                <label>عنوان الرابط:</label>
+                <input type="text" id="editTitle">
+            </div>
+            <div class="form-group" style="text-align: right;">
+                <label>رابط الموقع (URL):</label>
+                <input type="text" id="editUrl">
+            </div>
+            <div class="form-group" style="text-align: right;">
+                <label>الأيقونة أو الصورة:</label>
+                <input type="text" id="editIcon">
+            </div>
+            <div class="form-group" style="text-align: right;">
+                <label>الوصف المختصر:</label>
+                <input type="text" id="editDesc">
+            </div>
+            <button class="btn-action" style="width: 100%; margin-top: 10px;" onclick="saveEditedLink()">حفظ التعديلات</button>
+        </div>
+    </div>
+
     <!-- الفوتر -->
     <footer>
         <p>جميع الحقوق محفوظة © 2026 - **LAW CITY CFW** Server</p>
@@ -459,7 +489,7 @@
 
     <!-- البرمجة التفاعلية -->
     <script>
-        // إعدادات حساب المدير الافتراضية
+        // بيانات الحساب الافتراضية
         let adminSettings = {
             username: 'manager',
             password: '123'
@@ -467,8 +497,61 @@
 
         let isAdmin = false;
 
-        function toggleAuthModal() {
-            const modal = document.getElementById('loginModal');
+        // قائمة الروابط الافتراضية للسيرفر
+        let linksData = [
+            {
+                title: "ديسكورد السيرفر",
+                url: "https://discord.gg",
+                icon: "fa-brands fa-discord",
+                desc: "انضم لمجتمعنا الرسمي وتعرف على الرتب"
+            },
+            {
+                title: "قوانين وأنظمة السيرفر",
+                url: "#",
+                icon: "fa-solid fa-book",
+                desc: "دليل القوانين العامة والجنائية والسيناريوهات"
+            },
+            {
+                title: "التقديمات الإدارية والعسكرية",
+                url: "#",
+                icon: "fa-solid fa-file-invoice",
+                desc: "قدم على القطاعات العسكرية والإدارية المتاحة"
+            }
+        ];
+
+        // عرض الروابط في الصفحة
+        function renderLinks() {
+            const container = document.getElementById('linksContainer');
+            container.innerHTML = '';
+
+            linksData.forEach((link, index) => {
+                let iconHtml = link.icon.startsWith('http') 
+                    ? `<img src="${link.icon}" class="link-img" style="object-fit:cover;">` 
+                    : `<div class="link-img"><i class="${link.icon}"></i></div>`;
+
+                const card = document.createElement('div');
+                card.className = 'link-card';
+                card.style.position = 'relative';
+
+                card.innerHTML = `
+                    <div class="card-admin-actions" id="actions-${index}" style="display: ${isAdmin ? 'flex' : 'none'};">
+                        <button class="card-action-btn edit" onclick="openEditModal(${index})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="card-action-btn delete" onclick="deleteLink(${index})"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <a href="${link.url}" target="_blank" style="display: flex; align-items: center; gap: 20px; text-decoration: none; color: inherit; width: 100%;">
+                        ${iconHtml}
+                        <div class="link-info">
+                            <h3>${link.title}</h3>
+                            <p>${link.desc}</p>
+                        </div>
+                    </a>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
             modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
         }
 
@@ -481,13 +564,13 @@
                 document.getElementById('adminPanel').style.display = 'block';
                 document.getElementById('authBtn').style.display = 'none';
                 document.getElementById('userBadge').style.display = 'inline-block';
-                toggleAuthModal();
+                toggleModal('loginModal');
                 
-                // مسح حقول تسجيل الدخول للمزيد من الأمان
                 document.getElementById('usernameInput').value = '';
                 document.getElementById('passwordInput').value = '';
                 
-                alert('مرحباً بك يا Manager! تم تسجيل الدخول بنجاح.');
+                renderLinks(); // إعادة رسم الروابط لإظهار أزرار التعديل والحذف
+                alert('مرحباً بك يا Manager! تم تفعيل صلاحيات تعديل وحذف الروابط.');
             } else {
                 alert('خطأ في اسم المستخدم أو كلمة المرور!');
             }
@@ -498,6 +581,7 @@
             document.getElementById('adminPanel').style.display = 'none';
             document.getElementById('authBtn').style.display = 'inline-block';
             document.getElementById('userBadge').style.display = 'none';
+            renderLinks();
             alert('تم تسجيل الخروج بنجاح.');
         }
 
@@ -515,7 +599,7 @@
             }
             adminSettings.password = newPass;
             document.getElementById('newAdminPass').value = '';
-            alert('تم تغيير كلمة مرور المدير (Manager) بنجاح! تذكرها جيداً لدخولك القادم.');
+            alert('تم تغيير كلمة مرور المدير بنجاح!');
         }
 
         function addNewLink() {
@@ -529,32 +613,50 @@
                 return;
             }
 
-            const container = document.getElementById('linksContainer');
-            const newCard = document.createElement('a');
-            newCard.href = url;
-            newCard.target = '_blank';
-            newCard.className = 'link-card';
-            
-            let iconHtml = icon.startsWith('http') ? `<img src="${icon}" class="link-img" style="object-fit:cover;">` : `<div class="link-img"><i class="${icon}"></i></div>`;
+            linksData.push({ title, url, icon, desc });
+            renderLinks();
 
-            newCard.innerHTML = `
-                ${iconHtml}
-                <div class="link-info">
-                    <h3>${title}</h3>
-                    <p>${desc}</p>
-                </div>
-            `;
-
-            container.appendChild(newCard);
-
-            // تصفير الحقول
             document.getElementById('newTitle').value = '';
             document.getElementById('newUrl').value = '';
             document.getElementById('newIcon').value = '';
             document.getElementById('newDesc').value = '';
 
-            alert('تمت إضافة الرابط بنجاح للواجهة العامة!');
+            alert('تمت إضافة الرابط بنجاح للقائمة!');
         }
+
+        function deleteLink(index) {
+            if (confirm('هل أنت متأكد من حذف هذا الرابط؟')) {
+                linksData.splice(index, 1);
+                renderLinks();
+                alert('تم حذف الرابط بنجاح.');
+            }
+        }
+
+        function openEditModal(index) {
+            const link = linksData[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('editTitle').value = link.title;
+            document.getElementById('editUrl').value = link.url;
+            document.getElementById('editIcon').value = link.icon;
+            document.getElementById('editDesc').value = link.desc;
+            toggleModal('editModal');
+        }
+
+        function saveEditedLink() {
+            const index = document.getElementById('editIndex').value;
+            linksData[index] = {
+                title: document.getElementById('editTitle').value,
+                url: document.getElementById('editUrl').value,
+                icon: document.getElementById('editIcon').value,
+                desc: document.getElementById('editDesc').value
+            };
+            toggleModal('editModal');
+            renderLinks();
+            alert('تم تعديل تفاصيل الرابط بنجاح!');
+        }
+
+        // تشغيل عرض الروابط لأول مرة عند تحميل الصفحة
+        window.onload = renderLinks;
     </script>
 </body>
 </html>
